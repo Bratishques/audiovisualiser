@@ -12,12 +12,12 @@ export default function Home() {
   const [borderHeight, setBorderHeight] = useState(150);
   const [borderWidth, setBorderWidth] = useState(500);
   const [padding, setPadding] = useState(40);
-  const [previousX, setPreviousX] = useState(0)
+
 
   useEffect(() => {
     if (audioContextState) {
       // filter the data
-      const size = 100;
+      const size = 150;
       const rawData = audioContextState.getChannelData(0);
 
       const samples = Math.floor(rawData.length / size);
@@ -61,11 +61,11 @@ export default function Home() {
         // ctx.lineTo(xStart, -(borderHeight * sample));
         // ctx.stroke();
         ctx.beginPath();
-        ctx.rect(xStart, 0, stroke, -(sample * borderHeight));
+        ctx.rect(xStart+1, 0, stroke, -(sample * borderHeight));
         ctx.fill();
       };
 
-      //draw
+      //draw the equialized data
       for (let i = 0; i < equalizedData.length; i++) {
         const xStart = (borderWidth / size) * i + padding / 2;
         drawRect(equalizedData[i], stroke, xStart);
@@ -73,7 +73,6 @@ export default function Home() {
     }
   }, [audioContextState]);
 
-  const audioCallback = useCallback((e) => {});
 
   useEffect(() => {
     if (audioFile) {
@@ -93,17 +92,13 @@ export default function Home() {
     }
   }, [audioFile]);
 
-  // function for drawing the
-  const drawTimeRect = (ctx, previousX, currentX, overlay) => {
-    if (previousX > currentX) {
-      ctx.clearRect(0,0, overlay.width, overlay.height)
-      return
-    }
+  // function for drawing the time tracker
+  const drawTimeRect = (ctx, previousX, currentX, overlay, timePlayed) => {
     ctx.beginPath();
     ctx.clearRect(0,0, overlay.width, overlay.height)
-    console.log(currentX)
     ctx.fillStyle = "blue";
-    ctx.rect(padding/2, 0, currentX, borderHeight + padding - 10);
+
+    ctx.rect(padding/2, 0, currentX-(padding/2) , borderHeight + padding - 10);
     ctx.fill();
 
     
@@ -116,21 +111,28 @@ export default function Home() {
     if (window.document && audioContextState) {
       const overlay = document.getElementById("overlay-canvas");
       const ctx = overlay.getContext("2d");
-      ctx.globalAlpha = 0.5;
+      ctx.globalAlpha = 0.3;
       const timePlayed = currentTime / audioContextState.duration;
-      const currentX = padding / 2 + (timePlayed * borderWidth);
-      drawTimeRect(ctx, 0, currentX, overlay);
-      setPreviousX(currentX)
+
+      const currentX = padding / 2 + (timePlayed * (borderWidth));
+      drawTimeRect(ctx, 0, currentX, overlay, timePlayed);
     }
   }, [currentTime]);
 
-  const fetchAudio = async () => {
+
+  // fetch the audio and set the states to trigger the events
+
+  const fetchAudio = async (link = audioLink) => {
     setAudioContextState(null);
     if (window) {
       window.AudioContext = window.AudioContext || window.webkitAudioContext;
       const audioContext = new AudioContext();
       setAudioLoading(true);
-      const response = await fetch(audioLink);
+      const response = await fetch(link, {
+        mode: "cors",
+        
+      });
+      console.log(response)
       const buffer = await response.arrayBuffer();
       const decoded = await audioContext.decodeAudioData(buffer);
       setAudioContextState(decoded);
@@ -138,6 +140,52 @@ export default function Home() {
       setAudioLoading(false);
     }
   };
+
+  useEffect(() => {
+
+    //set up the third canvas for hover
+    if (audioFile) {
+      const hoverCanvas = document.getElementById("hover-canvas")
+      hoverCanvas.style.marginTop = -borderHeight - padding + "px";
+      hoverCanvas.width = borderWidth + padding;
+      hoverCanvas.height = borderHeight + padding;
+      const ctx = hoverCanvas.getContext("2d")
+      ctx.globalAlpha = 0.4
+      ctx.fillStyle = 'blue'
+      const audio = document.querySelector("audio");
+      const audioTime = audioContextState.duration
+      console.log(audioTime)
+
+      //rendering the mouse movement
+      hoverCanvas.onmousemove = (e) => {
+        const currentX = e.clientX - hoverCanvas.offsetLeft
+        ctx.clearRect(0,0,hoverCanvas.width, hoverCanvas.height)
+        if (currentX >= padding/8 && currentX <= borderWidth + (padding/2 + padding/8)) {
+          ctx.beginPath()
+          ctx.rect(currentX-5,0, 10, borderHeight + padding - 10)
+          ctx.fill()
+        }
+      }
+
+      //deleting the mouse position on mouse leaving
+      hoverCanvas.onmouseout = (e) => {
+        ctx.clearRect(0,0,hoverCanvas.width, hoverCanvas.height)
+      }
+      hoverCanvas.onclick = (e) => {
+        const currentX = e.clientX - hoverCanvas.offsetLeft
+
+        if(currentX >= padding/2 && currentX <= borderWidth + padding/2) {
+
+          console.log(currentX)
+          audio.currentTime = (currentX - padding/2)/borderWidth * audioTime
+        }
+      }
+
+    }
+
+  },[audioFile])
+
+
 
   return (
     <div className="container">
@@ -164,10 +212,21 @@ export default function Home() {
           </label>
           <button onClick={fetchAudio}>Submit</button>
         </div>
+        <div>
+        <label>
+          Or upload an audio
+          <input type="file" onChange={(e) => {
+            console.log(e.target.files[0])
+           
+            fetchAudio(URL.createObjectURL(e.target.files[0]))
+            setAudioLink(URL.createObjectURL(e.target.files[0]))
+          }}></input>
+          </label>
+        </div>
         {audioLoading && <div>...loading</div>}
         <canvas id="line-canvas"></canvas>
         <canvas id="overlay-canvas"></canvas>
-        <canvas id=""></canvas>
+        <canvas id="hover-canvas"></canvas>
         {audioFile && (
           <div>
             <audio src={audioLink} controls></audio>
