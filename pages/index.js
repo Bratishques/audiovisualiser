@@ -8,15 +8,16 @@ export default function Home() {
   const [audioFile, setAudioFile] = useState(null);
   const [audioContextState, setAudioContextState] = useState(null);
   const [audioLoading, setAudioLoading] = useState(false);
-  const [currentTime, setCurrentTime] = useState(0)
-  const [borderHeight, setBorderHeight] = useState(150)
-  const [borderWidth, setBorderWidth] = useState(500)
-  const [padding, setPadding] = useState(40)
+  const [currentTime, setCurrentTime] = useState(0);
+  const [borderHeight, setBorderHeight] = useState(150);
+  const [borderWidth, setBorderWidth] = useState(500);
+  const [padding, setPadding] = useState(40);
+  const [previousX, setPreviousX] = useState(0)
 
   useEffect(() => {
     if (audioContextState) {
       // filter the data
-      const size = 80;
+      const size = 100;
       const rawData = audioContextState.getChannelData(0);
 
       const samples = Math.floor(rawData.length / size);
@@ -29,19 +30,17 @@ export default function Home() {
         }
         filteredData.push(sum / samples);
       }
-      console.log(filteredData);
 
       // equailize the data
       let multiplier = 1 / Math.max(...filteredData);
-      const equalizedData = filteredData.map((a) => a * multiplier);
-      console.log(equalizedData);
+      let equalizedData = filteredData.map((a) => a * multiplier);
 
       // get visuals done
       const canvas = document.getElementById("line-canvas");
       canvas.width = borderWidth + padding;
       canvas.height = borderHeight + padding;
       const ctx = canvas.getContext("2d");
-      ctx.translate(0, borderHeight+padding-10);
+      ctx.translate(0, borderHeight + padding - 10);
 
       //draw the bottom line
       const drawBottomLine = () => {
@@ -56,13 +55,17 @@ export default function Home() {
       const stroke = borderWidth / size - 2;
 
       const drawRect = (sample, stroke, xStart) => {
-        ctx.lineWidth = stroke;
+        // ctx.lineWidth = stroke;
+        // ctx.beginPath();
+        // ctx.moveTo(xStart, 0);
+        // ctx.lineTo(xStart, -(borderHeight * sample));
+        // ctx.stroke();
         ctx.beginPath();
-        ctx.moveTo(xStart, 0);
-        ctx.lineTo(xStart, -(borderHeight * sample));
-        ctx.stroke();
+        ctx.rect(xStart, 0, stroke, -(sample * borderHeight));
+        ctx.fill();
       };
 
+      //draw
       for (let i = 0; i < equalizedData.length; i++) {
         const xStart = (borderWidth / size) * i + padding / 2;
         drawRect(equalizedData[i], stroke, xStart);
@@ -70,21 +73,56 @@ export default function Home() {
     }
   }, [audioContextState]);
 
-  const audioCallback = useCallback((e) => {
-
-  })
+  const audioCallback = useCallback((e) => {});
 
   useEffect(() => {
     if (audioFile) {
-    const audio = document.querySelector("audio")
-    setInterval(() => {
-      setCurrentTime(audio.currentTime)
-      console.log(audio.currentTime)
-    }, 100)
-    const overlay = document
-  }
+      // get audio and canvas
+      const audio = document.querySelector("audio");
+
+      // listen every x ms for the current playing time
+      setInterval(() => {
+        setCurrentTime(audio.currentTime);
+      }, 100);
+
+      //set up the overlay canvas
+      const overlay = document.getElementById("overlay-canvas");
+      overlay.style.marginTop = -borderHeight - padding + "px";
+      overlay.width = borderWidth + padding;
+      overlay.height = borderHeight + padding;
+    }
   }, [audioFile]);
 
+  // function for drawing the
+  const drawTimeRect = (ctx, previousX, currentX, overlay) => {
+    if (previousX > currentX) {
+      ctx.clearRect(0,0, overlay.width, overlay.height)
+      return
+    }
+    ctx.beginPath();
+    ctx.clearRect(0,0, overlay.width, overlay.height)
+    console.log(currentX)
+    ctx.fillStyle = "blue";
+    ctx.rect(padding/2, 0, currentX, borderHeight + padding - 10);
+    ctx.fill();
+
+    
+  };
+
+  // useEffect reacting to changing the time
+
+  useEffect(() => {
+    console.log("timechanged")
+    if (window.document && audioContextState) {
+      const overlay = document.getElementById("overlay-canvas");
+      const ctx = overlay.getContext("2d");
+      ctx.globalAlpha = 0.5;
+      const timePlayed = currentTime / audioContextState.duration;
+      const currentX = padding / 2 + (timePlayed * borderWidth);
+      drawTimeRect(ctx, 0, currentX, overlay);
+      setPreviousX(currentX)
+    }
+  }, [currentTime]);
 
   const fetchAudio = async () => {
     setAudioContextState(null);
@@ -95,7 +133,6 @@ export default function Home() {
       const response = await fetch(audioLink);
       const buffer = await response.arrayBuffer();
       const decoded = await audioContext.decodeAudioData(buffer);
-      console.log(decoded);
       setAudioContextState(decoded);
       setAudioFile(response);
       setAudioLoading(false);
@@ -130,12 +167,11 @@ export default function Home() {
         {audioLoading && <div>...loading</div>}
         <canvas id="line-canvas"></canvas>
         <canvas id="overlay-canvas"></canvas>
+        <canvas id=""></canvas>
         {audioFile && (
           <div>
             <audio src={audioLink} controls></audio>
-            <div>
-
-            </div>
+            <div></div>
           </div>
         )}
       </main>
