@@ -4,6 +4,6 @@ module.exports = {
   sassOptions: {
     includePaths: [path.join(__dirname, 'styles')],
   },
-  assetPrefix: "/audiovisualiser/",
-  basePath: '/audiovisualiser'
+  //assetPrefix: "/audiovisualiser/",
+  //basePath: '/audiovisualiser'
 }

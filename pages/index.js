@@ -1,5 +1,7 @@
 import Head from "next/head";
 import { useCallback, useEffect, useState } from "react";
+import Inputs from "../components/inputs";
+import Sidebar from "../components/sidebar";
 
 export default function Home() {
   const [audioLink, setAudioLink] = useState(
@@ -8,16 +10,18 @@ export default function Home() {
   const [audioFile, setAudioFile] = useState(null);
   const [audioContextState, setAudioContextState] = useState(null);
   const [audioLoading, setAudioLoading] = useState(false);
+  const [size, setSize] = useState(150)
   const [currentTime, setCurrentTime] = useState(0);
   const [borderHeight, setBorderHeight] = useState(150);
-  const [borderWidth, setBorderWidth] = useState(700);
+  const [borderWidth, setBorderWidth] = useState(720);
   const [padding, setPadding] = useState(40);
+  const [mode, setMode] = useState("BOTTOM_AXIS")
+  
 
 
   useEffect(() => {
     if (audioContextState) {
       // filter the data
-      const size = 150;
       const rawData = audioContextState.getChannelData(0);
 
       const samples = Math.floor(rawData.length / size);
@@ -40,30 +44,60 @@ export default function Home() {
       canvas.width = borderWidth + padding;
       canvas.height = borderHeight + padding;
       const ctx = canvas.getContext("2d");
-      ctx.translate(0, borderHeight + padding - 10);
 
-      //draw the bottom line
+
+      //defining the void function to cycle through later
+      let drawRect = () => {}
       const drawBottomLine = () => {
         ctx.beginPath();
         ctx.moveTo(0, 0);
         ctx.lineTo(canvas.width, 0);
         ctx.stroke();
       };
-      drawBottomLine();
 
-      //prepare the lines
+      // the width of rectangles
       const stroke = borderWidth / size - 2;
 
-      const drawRect = (sample, stroke, xStart) => {
-        // ctx.lineWidth = stroke;
-        // ctx.beginPath();
-        // ctx.moveTo(xStart, 0);
-        // ctx.lineTo(xStart, -(borderHeight * sample));
-        // ctx.stroke();
-        ctx.beginPath();
-        ctx.rect(xStart+1, 0, stroke, -(sample * borderHeight));
-        ctx.fill();
-      };
+      if (mode === "BOTTOM_AXIS") {
+        //setting the line to bottom
+        ctx.translate(0, borderHeight + padding - 10);
+
+        //draw the bottom line
+       
+        drawBottomLine();
+
+        //prepare the lines
+  
+        drawRect = (sample, stroke, xStart) => {
+          // ctx.lineWidth = stroke;
+          // ctx.beginPath();
+          // ctx.moveTo(xStart, 0);
+          // ctx.lineTo(xStart, -(borderHeight * sample));
+          // ctx.stroke();
+          ctx.beginPath();
+          ctx.rect(xStart+1, 0, stroke, -(sample * borderHeight));
+          ctx.fill();
+        };
+      }
+
+      else if (mode === "SYMMETRY") {
+
+        ctx.translate(0, (borderHeight + (padding/2))/2)
+
+        drawBottomLine();
+
+        drawRect = (sample, stroke, xStart) => {
+          ctx.beginPath()
+          ctx.rect(xStart+1, 0, stroke, -(sample * borderHeight/2))
+          ctx.fill();
+          ctx.beginPath()
+          ctx.rect(xStart+1, 0, stroke, (sample * borderHeight/2))
+          ctx.fill();
+        }
+
+
+      }
+  
 
       //draw the equialized data
       for (let i = 0; i < equalizedData.length; i++) {
@@ -71,7 +105,7 @@ export default function Home() {
         drawRect(equalizedData[i], stroke, xStart);
       }
     }
-  }, [audioContextState]);
+  }, [audioContextState, borderWidth, borderHeight, padding, mode, size]);
 
 
   useEffect(() => {
@@ -90,7 +124,7 @@ export default function Home() {
       overlay.width = borderWidth + padding;
       overlay.height = borderHeight + padding;
     }
-  }, [audioFile]);
+  }, [audioFile, borderWidth, borderHeight, padding, mode]);
 
   // function for drawing the time tracker
   const drawTimeRect = (ctx, previousX, currentX, overlay, timePlayed) => {
@@ -116,7 +150,7 @@ export default function Home() {
       const currentX = padding / 2 + (timePlayed * (borderWidth));
       drawTimeRect(ctx, 0, currentX, overlay, timePlayed);
     }
-  }, [currentTime]);
+  }, [currentTime, borderWidth, borderHeight, padding, mode]);
 
 
   // fetch the audio and set the states to trigger the events
@@ -190,7 +224,7 @@ export default function Home() {
 
     }
 
-  },[audioFile])
+  },[audioFile, borderWidth, borderHeight, padding, mode])
 
 
 
@@ -202,50 +236,38 @@ export default function Home() {
       </Head>
 
       <main>
+      <Sidebar 
+      borderWidth={borderWidth} 
+      setBorderWidth={setBorderWidth}
+      borderHeight = {borderHeight}
+      setBorderHeight = {setBorderHeight}
+      padding = {padding}
+      setPadding = {setPadding}
+      mode = {mode}
+      setMode = {setMode}
+      size = {size}
+      setSize = {setSize}
+       />
+      <div className="app-container">
         <div>
           <h1>Audio Visualiser</h1>
         </div>
-        <div>
-          <label htmlFor="link">
-            Please enter an audio link:
-            <input
-              type="link"
-              id="link"
-              value={audioLink}
-              onChange={(e) => {
-                setAudioLink(e.target.value);
-              }}
-            ></input>
-          </label>
-          <button onClick={fetchAudio}>Submit</button>
-        </div>
-        <div>
-          <label>
-            Or upload an audio
-            <input
-              type="file"
-              onChange={(e) => {
-                console.log(e.target.files[0]);
-
-                fetchAudio(URL.createObjectURL(e.target.files[0]));
-                setAudioLink(URL.createObjectURL(e.target.files[0]));
-              }}
-            ></input>
-          </label>
-        </div>
+        <Inputs setAudioLink={setAudioLink} fetchAudio={fetchAudio} audioLink = {audioLink}/>
         {audioLoading && <div>...loading</div>}
         <canvas id="line-canvas"></canvas>
         <canvas id="overlay-canvas"></canvas>
         <canvas id="hover-canvas"></canvas>
         {audioFile && (
           <div>
-            <audio src={audioLink} controls></audio>
+            <audio src={audioLink} controls ></audio>
             <div></div>
           </div>
         )}
+        </div>
       </main>
 
-      <footer></footer>
+
     </div>
+
   );
 }
