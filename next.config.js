@@ -13,6 +13,6 @@ module.exports = {
     });
     return config;
   },
-  //assetPrefix: "/audiovisualiser/",
-  //basePath: '/audiovisualiser'
+  assetPrefix: "/audiovisualiser/",
+  basePath: '/audiovisualiser'
 };
