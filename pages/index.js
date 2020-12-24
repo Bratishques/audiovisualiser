@@ -10,7 +10,7 @@ export default function Home() {
   const [audioLoading, setAudioLoading] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [borderHeight, setBorderHeight] = useState(150);
-  const [borderWidth, setBorderWidth] = useState(500);
+  const [borderWidth, setBorderWidth] = useState(700);
   const [padding, setPadding] = useState(40);
 
 
@@ -107,7 +107,6 @@ export default function Home() {
   // useEffect reacting to changing the time
 
   useEffect(() => {
-    console.log("timechanged")
     if (window.document && audioContextState) {
       const overlay = document.getElementById("overlay-canvas");
       const ctx = overlay.getContext("2d");
@@ -171,13 +170,21 @@ export default function Home() {
       hoverCanvas.onmouseout = (e) => {
         ctx.clearRect(0,0,hoverCanvas.width, hoverCanvas.height)
       }
+
+      // click event, turn music on/off
       hoverCanvas.onclick = (e) => {
         const currentX = e.clientX - hoverCanvas.offsetLeft
 
-        if(currentX >= padding/2 && currentX <= borderWidth + padding/2) {
-
+        if (currentX > 0 && currentX < padding/2) {
+          
           console.log(currentX)
+          audio.currentTime = 0
+          audio.play()
+        }
+
+        if(currentX >= padding/2 && currentX <= borderWidth + padding/2) {
           audio.currentTime = (currentX - padding/2)/borderWidth * audioTime
+          audio.play()
         }
       }
 
@@ -213,14 +220,17 @@ export default function Home() {
           <button onClick={fetchAudio}>Submit</button>
         </div>
         <div>
-        <label>
-          Or upload an audio
-          <input type="file" onChange={(e) => {
-            console.log(e.target.files[0])
-           
-            fetchAudio(URL.createObjectURL(e.target.files[0]))
-            setAudioLink(URL.createObjectURL(e.target.files[0]))
-          }}></input>
+          <label>
+            Or upload an audio
+            <input
+              type="file"
+              onChange={(e) => {
+                console.log(e.target.files[0]);
+
+                fetchAudio(URL.createObjectURL(e.target.files[0]));
+                setAudioLink(URL.createObjectURL(e.target.files[0]));
+              }}
+            ></input>
           </label>
         </div>
         {audioLoading && <div>...loading</div>}
