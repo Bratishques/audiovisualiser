@@ -161,10 +161,7 @@ export default function Home() {
       window.AudioContext = window.AudioContext || window.webkitAudioContext;
       const audioContext = new AudioContext();
       setAudioLoading(true);
-      const response = await fetch(link, {
-        mode: "cors",
-        
-      });
+      const response = await fetch(String(audioLink));
       console.log(response)
       const buffer = await response.arrayBuffer();
       const decoded = await audioContext.decodeAudioData(buffer);
