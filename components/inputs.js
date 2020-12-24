@@ -16,7 +16,12 @@ const Inputs = ({setAudioLink, fetchAudio, audioLink}) => {
               }}
             ></input>
           </label>
-          <button onClick={fetchAudio}>Submit</button>
+          <button onChange = {(e) => {
+              if (window.document) {
+              const link = document.getElementById("link")
+              setAudioLink(link.value)
+            }
+          }}>Submit</button>
         </div>
         <div style={{
             marginTop: "10px"
@@ -27,9 +32,8 @@ const Inputs = ({setAudioLink, fetchAudio, audioLink}) => {
               type="file"
               onChange={(e) => {
                 console.log(e.target.files[0]);
-
-                fetchAudio(URL.createObjectURL(e.target.files[0]));
                 setAudioLink(URL.createObjectURL(e.target.files[0]));
+
               }}
             ></input>
           </label>

@@ -104,26 +104,37 @@ export default function Home() {
         const xStart = (borderWidth / size) * i + padding / 2;
         drawRect(equalizedData[i], stroke, xStart);
       }
+
+      return () => {
+        ctx.clearRect(0,0, canvas.width, canvas.height)
+      }
     }
   }, [audioContextState, borderWidth, borderHeight, padding, mode, size]);
 
 
   useEffect(() => {
+  
     if (audioFile) {
+      clearInterval(timer)
       // get audio and canvas
       const audio = document.querySelector("audio");
 
       // listen every x ms for the current playing time
-      setInterval(() => {
+      
+      const timer = setInterval(() => {
         setCurrentTime(audio.currentTime);
       }, 100);
-
       //set up the overlay canvas
       const overlay = document.getElementById("overlay-canvas");
       overlay.style.marginTop = -borderHeight - padding + "px";
       overlay.width = borderWidth + padding;
       overlay.height = borderHeight + padding;
+      return () => {
+        clearInterval(timer)
+      }
     }
+
+    
   }, [audioFile, borderWidth, borderHeight, padding, mode]);
 
   // function for drawing the time tracker
@@ -150,26 +161,35 @@ export default function Home() {
       const currentX = padding / 2 + (timePlayed * (borderWidth));
       drawTimeRect(ctx, 0, currentX, overlay, timePlayed);
     }
-  }, [currentTime, borderWidth, borderHeight, padding, mode]);
+  }, [audioContextState, currentTime, borderWidth, borderHeight, padding, mode]);
 
 
   // fetch the audio and set the states to trigger the events
 
-  const fetchAudio = async (link = audioLink) => {
-    setAudioContextState(null);
-    if (window) {
-      window.AudioContext = window.AudioContext || window.webkitAudioContext;
-      const audioContext = new AudioContext();
-      setAudioLoading(true);
-      const response = await fetch(String(audioLink));
-      console.log(response)
-      const buffer = await response.arrayBuffer();
-      const decoded = await audioContext.decodeAudioData(buffer);
-      setAudioContextState(decoded);
-      setAudioFile(response);
-      setAudioLoading(false);
-    }
-  };
+  useEffect(() => {
+
+    const fetchAudio = async (link = audioLink) => {
+      setAudioContextState(null);
+      setAudioFile(null)
+      if (window) {
+        window.AudioContext = window.AudioContext || window.webkitAudioContext;
+        const audioContext = new AudioContext();
+        setAudioLoading(true);
+        const response = await fetch(String(audioLink));
+        console.log(response)
+        const buffer = await response.arrayBuffer();
+        const decoded = await audioContext.decodeAudioData(buffer);
+        setAudioContextState(decoded);
+        setAudioFile(response);
+        setAudioLoading(false);
+      }
+  
+    };
+    fetchAudio()
+
+  }, [audioLink])
+
+  
 
   useEffect(() => {
 
@@ -249,7 +269,7 @@ export default function Home() {
         <div>
           <h1>Audio Visualiser</h1>
         </div>
-        <Inputs setAudioLink={setAudioLink} fetchAudio={fetchAudio} audioLink = {audioLink}/>
+        <Inputs setAudioLink={setAudioLink} audioLink = {audioLink}/>
         {audioLoading && <div>...loading</div>}
         <canvas id="line-canvas"></canvas>
         <canvas id="overlay-canvas"></canvas>
