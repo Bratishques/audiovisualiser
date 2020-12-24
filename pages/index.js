@@ -5,7 +5,7 @@ import Sidebar from "../components/sidebar";
 
 export default function Home() {
   const [audioLink, setAudioLink] = useState(
-    "https://s3-us-west-2.amazonaws.com/s.cdpn.io/3/shoptalk-clip.mp3"
+    "https://bratishques.github.io/audiovisualiser/mp3.mp3"
   );
   const [audioFile, setAudioFile] = useState(null);
   const [audioContextState, setAudioContextState] = useState(null);
