@@ -82,7 +82,7 @@ export default function Home() {
 
       else if (mode === "SYMMETRY") {
 
-        ctx.translate(0, (borderHeight + (padding/2))/2)
+        ctx.translate(0, (borderHeight + (padding))/2)
 
         drawBottomLine();
 
