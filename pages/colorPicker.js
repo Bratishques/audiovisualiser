@@ -5,25 +5,35 @@ const ColorPicker = ({ passedColor, setPassedColor, id }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [coordinates, setCoordinates] = useState({ x: 120, y: 0 });
   const [isPressed, setIsPressed] = useState(false);
-  const [mainHue, setMainHue] = useState(`rgb(255,0,0)`)
-  
+  const [mainHue, setMainHue] = useState(`rgb(255,0,0)`);
 
-  const getColorFromHueAndCoordinates = (x,y,hue, width, height) => {
-    const match = hue.match(/([0-9]+\.*[0-9]*)/g)
-    if  (match) {
-    const r = match[0]
-    const g = match[1]
-    const b = match[2]
+  const getColorFromHueAndCoordinates = (x, y, hue, width, height) => {
+    const match = hue.match(/([0-9]+\.*[0-9]*)/g);
+    if (match) {
+      const r = match[0];
+      const g = match[1];
+      const b = match[2];
+      console.log(r,g,b)
+      const fixedR =
+        Number(r) +
+        (255 - r) * (1 - x / width) * (1 - y / height) -
+        ((255 - (255 - r)) * y) / height;
+      const fixedG =
+        Number(g) +
+        (255 - g) * (1 - x / width) * (1 - y / height) -
+        ((255 - (255 - g)) * y) / height;
+      const fixedB =
+        Number(b) +
+        (255 - b) * (1 - x / width) * (1 - y / height) -
+        ((255 - (255 - b)) * y) / height;
+      if (fixedR) {
+        console.log(fixedR)
+        setPassedColor(`rgb(${fixedR}, ${fixedG}, ${fixedB})`);
+      }
 
-    const fixedR = (Number(r) + ((255 - r) * (1 - x/width)) * (1 - y/height)) - ((255 - (255-r)) * y/height )
-    const fixedG = (Number(g) + ((255 - g) * (1 - x/width)) * (1 - y/height)) - ((255 - (255-g)) * y/height )
-    const fixedB = (Number(b) + ((255 - b) * (1 - x/width)) * (1 - y/height)) - ((255 - (255-b)) * y/height )
-    console.log(fixedR, fixedG, fixedB)
-
-    setPassedColor(`rgb(${fixedR}, ${fixedG}, ${fixedB})`)
-
-  }
-  }
+      
+    }
+  };
 
   const elementId = id + "-picker";
 
@@ -35,12 +45,21 @@ const ColorPicker = ({ passedColor, setPassedColor, id }) => {
   };
 
   useEffect(() => {
+
+    if (mainHue) {
+ 
     const colorPicker = document.getElementById(elementId);
     const width = colorPicker.getBoundingClientRect().width;
     const height = colorPicker.getBoundingClientRect().height;
-
-    getColorFromHueAndCoordinates(coordinates.x,coordinates.y,mainHue, width, height)
-  }, [coordinates, mainHue])
+    getColorFromHueAndCoordinates(
+      coordinates.x,
+      coordinates.y,
+      mainHue,
+      width,
+      height
+    );
+  }
+  }, [coordinates, mainHue]);
 
   //Listener for the point movement
 
@@ -50,8 +69,8 @@ const ColorPicker = ({ passedColor, setPassedColor, id }) => {
     const y = colorPicker.getBoundingClientRect().y;
     const width = colorPicker.getBoundingClientRect().width;
     const height = colorPicker.getBoundingClientRect().height;
-    let accurateX = e.pageX - x;
-    let accurateY = e.pageY - y;
+    let accurateX = e.clientX - x;
+    let accurateY = e.clientY - y;
     if (accurateX < 0) {
       accurateX = 0;
     } else if (accurateX > width) {
@@ -68,7 +87,6 @@ const ColorPicker = ({ passedColor, setPassedColor, id }) => {
   });
 
   const cleanListener = useCallback((e) => {
-
     setIsPressed(false);
     window.removeEventListener("mousemove", listener);
   });
@@ -120,10 +138,10 @@ const ColorPicker = ({ passedColor, setPassedColor, id }) => {
           id={elementId}
           onMouseDown={(e) => {
             setIsPressed(true);
-            console.log(e.pageX, e.pageY);
+            console.log(e.clientX, e.clientY);
             const colorPicker = document.getElementById(elementId);
-            let valueX = e.pageX - colorPicker.getBoundingClientRect().x;
-            let valueY = e.pageY - colorPicker.getBoundingClientRect().y;
+            let valueX = e.clientX - colorPicker.getBoundingClientRect().x;
+            let valueY = e.clientY - colorPicker.getBoundingClientRect().y;
             setCoords(valueX, valueY);
             console.log(valueX, valueY);
           }}
@@ -148,7 +166,7 @@ const ColorPicker = ({ passedColor, setPassedColor, id }) => {
             </div>
           </div>
         </div>
-        <HuePicker isOpen={isOpen} elementId={elementId} setHue={setMainHue}/>
+        <HuePicker isOpen={isOpen} elementId={elementId} setHue={setMainHue} />
       </div>
     </div>
   );

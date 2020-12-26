@@ -49,7 +49,6 @@ export default function Home() {
       ctx.fillStyle = mainCanvasColor
 
       //defining the void function to cycle through later
-      ctx.fillStyle = mainCanvasColor
       let drawRect = () => {}
       const drawBottomLine = () => {
 

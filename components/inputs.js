@@ -1,12 +1,12 @@
 
 
-const Inputs = ({setAudioLink, fetchAudio, audioLink}) => {
+const Inputs = ({setAudioLink, audioLink}) => {
 
     return (
+      <div>
         <div>
-           <div>
           <label htmlFor="link">
-            Please enter an audio link: 
+            Please enter an audio link:
             <input
               type="link"
               id="link"
@@ -16,30 +16,35 @@ const Inputs = ({setAudioLink, fetchAudio, audioLink}) => {
               }}
             ></input>
           </label>
-          <button onChange = {(e) => {
+          <button
+            onChange={(e) => {
               if (window.document) {
-              const link = document.getElementById("link")
-              setAudioLink(link.value)
-            }
-          }}>Submit</button>
+                const link = document.getElementById("link");
+                setAudioLink(link.value);
+              }
+            }}
+          >
+            Submit
+          </button>
         </div>
-        <div style={{
-            marginTop: "10px"
-        }}>
+        <div
+          style={{
+            marginTop: "10px",
+          }}
+        >
           <label>
-            Or upload an audio 
+            Or upload an audio
             <input
               type="file"
               onChange={(e) => {
                 console.log(e.target.files[0]);
                 setAudioLink(URL.createObjectURL(e.target.files[0]));
-
               }}
             ></input>
           </label>
         </div>
-        </div>
-    )
+      </div>
+    );
 }
 
 export default Inputs

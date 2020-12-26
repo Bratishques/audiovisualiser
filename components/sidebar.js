@@ -11,7 +11,7 @@ const H4 = styled.h4`
 
 const Sidebar = ({ borderWidth, setBorderWidth, borderHeight, setBorderHeight, padding, setPadding, size, setSize, mode, setMode, mainCanvasColor, setMainCanvasColor, overlayCanvasColor, setOverlayCanvasColor}) => {
 
-    const [isOpen, setIsOpen] = useState(true)
+    const [isOpen, setIsOpen] = useState(true);
     const modes = ["BOTTOM_AXIS", "SYMMETRY"]
 
     const changeRadio = (e) => {
