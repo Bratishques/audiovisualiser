@@ -167,7 +167,7 @@ export default function Home() {
       const currentX = padding / 2 + (timePlayed * (borderWidth));
       drawTimeRect(ctx, 0, currentX, overlay, timePlayed);
     }
-  }, [audioContextState, currentTime, borderWidth, borderHeight, padding, mode]);
+  }, [audioContextState, currentTime, borderWidth, borderHeight, padding, mode, overlayCanvasColor]);
 
 
   // fetch the audio and set the states to trigger the events
