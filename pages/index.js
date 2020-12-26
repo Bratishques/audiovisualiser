@@ -16,6 +16,8 @@ export default function Home() {
   const [borderWidth, setBorderWidth] = useState(720);
   const [padding, setPadding] = useState(40);
   const [mode, setMode] = useState("BOTTOM_AXIS")
+  const [mainCanvasColor, setMainCanvasColor] = useState(`rgb(255,0,0)`)
+  const [overlayCanvasColor, setOverlayCanvasColor] = useState(`rgb(6,25,197)`)
   
 
 
@@ -44,11 +46,13 @@ export default function Home() {
       canvas.width = borderWidth + padding;
       canvas.height = borderHeight + padding;
       const ctx = canvas.getContext("2d");
-
+      ctx.fillStyle = mainCanvasColor
 
       //defining the void function to cycle through later
+      ctx.fillStyle = mainCanvasColor
       let drawRect = () => {}
       const drawBottomLine = () => {
+
         ctx.beginPath();
         ctx.moveTo(0, 0);
         ctx.lineTo(canvas.width, 0);
@@ -57,6 +61,7 @@ export default function Home() {
 
       // the width of rectangles
       const stroke = borderWidth / size - 2;
+
 
       if (mode === "BOTTOM_AXIS") {
         //setting the line to bottom
@@ -109,7 +114,7 @@ export default function Home() {
         ctx.clearRect(0,0, canvas.width, canvas.height)
       }
     }
-  }, [audioContextState, borderWidth, borderHeight, padding, mode, size]);
+  }, [audioContextState, borderWidth, borderHeight, padding, mode, size, mainCanvasColor]);
 
 
   useEffect(() => {
@@ -124,6 +129,7 @@ export default function Home() {
       const timer = setInterval(() => {
         setCurrentTime(audio.currentTime);
       }, 100);
+      
       //set up the overlay canvas
       const overlay = document.getElementById("overlay-canvas");
       overlay.style.marginTop = -borderHeight - padding + "px";
@@ -141,7 +147,7 @@ export default function Home() {
   const drawTimeRect = (ctx, previousX, currentX, overlay, timePlayed) => {
     ctx.beginPath();
     ctx.clearRect(0,0, overlay.width, overlay.height)
-    ctx.fillStyle = "blue";
+    ctx.fillStyle = overlayCanvasColor;
 
     ctx.rect(padding/2, 0, currentX-(padding/2) , borderHeight + padding - 10);
     ctx.fill();
@@ -264,6 +270,10 @@ export default function Home() {
       setMode = {setMode}
       size = {size}
       setSize = {setSize}
+      mainCanvasColor = {mainCanvasColor}
+      setMainCanvasColor = {setMainCanvasColor}
+      overlayCanvasColor = {overlayCanvasColor}
+      setOverlayCanvasColor = {setOverlayCanvasColor}
        />
       <div className="app-container">
         <div>
